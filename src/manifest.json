@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+
+  "name": "CustomJS",
+  "short_name": "cjs",
+  "description": "Run custom JavaScript on any website.",
+  "version": "0.0.0",
+
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+
+  "browser_action": {
+    "default_icon": "images/ON.png",
+    "default_popup": "popup/index.html"
+  },
+
+  "icons": { "128": "images/ON-128x128.png" }
+}
