@@ -1,14 +1,11 @@
 immutable = require 'immutable'
 
 module.exports =
-  getInitialData: (origin, callback) ->
+  getWebsiteData: (origin, callback) ->
     # TODO: chrome.storage.get
 
     data =
-      websites:
-        all: [origin, 'hoho']
-        selected: origin
-        current: origin
+      websites: [origin, 'hoho']
       script:
         enable: false
         source: 'some source'
