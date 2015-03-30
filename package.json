@@ -17,7 +17,10 @@
   },
   "dependencies": {
     "brace": "^0.5.0",
-    "react": "0.13.x"
+    "immutable": "^3.6.4",
+    "kefir": "^1.2.0",
+    "react": "0.13.x",
+    "transducers-js": "^0.4.135"
   },
   "devDependencies": {
     "browserify": "8.0.x",
@@ -35,6 +38,5 @@
     "vinyl-source-stream": "1.0.x",
     "watchify": "2.2.x"
   },
-  "scripts": {
-  }
+  "scripts": {}
 }

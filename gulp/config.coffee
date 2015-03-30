@@ -17,8 +17,8 @@ module.exports =
     # bundle config in the list below
     bundleConfigs: [{
       entries: "#{src}/popup/index.cjsx"
-      dest: dest
-      outputName: "popup/index.js"
+      dest: "#{dest}/popup/"
+      outputName: "index.js"
     }, {
       entries: "#{src}/background/index.coffee"
       dest: dest
