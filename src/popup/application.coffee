@@ -45,10 +45,12 @@ class Application
     storage.getWebsiteData website, @receive.bind this
 
   receive: (data) ->
-    @websites.all = data.websites
+    all = data.websites
 
-    if @websites.all.indexOf @websites.current
-      @websites.all.push @websites.current
+    if all.indexOf(@websites.current) is -1
+      all.push @websites.current
+
+    @websites.all = all
 
     # Array of max 2 items (script and draft)
     @scripts = fromJS data.scripts
@@ -76,14 +78,25 @@ class Application
     storage.setScripts @websites.selected, @scripts.toJS(), =>
       @emit 'state-changed', 'update', script
 
+  isDraft: (script) ->
+    script.get('state') is Const.DRAFT_STATE
+
   save: ->
-    script = @scripts.last().remove 'state'
+    script = @scripts.last()
+
+    # Only modified scripts will be stored
+    return unless @isDraft script
+
+    script = script.remove 'state'
     @scripts = new List [script]
 
     storage.setScripts @websites.selected, @scripts.toJS(), =>
       @emit 'state-changed', 'save', script
 
   remove: ->
+    # Only modified scripts will be removed
+    return unless @isDraft @scripts.last()
+
     @scripts = new List [fromJS Const.INITIAL_SCRIPT]
 
     storage.removeScripts @websites.selected, =>
@@ -99,9 +112,6 @@ class Application
       storage.removeScripts @websites.selected, callback
     else
       storage.setScripts @websites.selected, @scripts.toJS(), callback
-
-  isDraft: (script) ->
-    script.get('state') is Const.DRAFT_STATE
 
   render: ->
     # Draft will be always the last script, if exists
