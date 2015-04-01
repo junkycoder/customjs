@@ -5,9 +5,12 @@ module.exports =
     # TODO: chrome.storage.get
 
     data =
-      websites: [origin, 'hoho']
-      script:
-        enable: false
-        source: 'some source'
+      websites: []
+      scripts: []
 
     callback data
+
+  setScripts: (origin, scripts, callback) ->
+
+    console.log 'save', scripts
+    do callback

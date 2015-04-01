@@ -3,6 +3,8 @@ Kefir = require 'kefir'
 {List, fromJS} = require 'immutable'
 {comp, filter, map} = require 'transducers-js'
 
+window.List = List
+
 storage = require './utils/storage'
 
 register = (stream, messageType, handler) ->
@@ -11,6 +13,14 @@ register = (stream, messageType, handler) ->
     map (x) => x.rest()
   )
   stream.transduce(xform).onValue handler
+
+INITIAL_STATE = 0
+DRAFT_STATE   = 1
+
+INITIAL_SCRIPT =
+  enable: false
+  source: '// Here you can type your script'
+  state: INITIAL_STATE
 
 class Application
   websites:
@@ -45,14 +55,35 @@ class Application
 
   receive: (data) ->
     @websites.all = data.websites
-    @state = fromJS data.script
 
-    @emit 'state-changed', 'receive', @state
+    if @websites.all.indexOf @websites.current
+      @websites.all.push @websites.current
+
+    # Array of max 2 items (script and draft)
+    @scripts = fromJS data.scripts
+
+    if @scripts.count() is 0
+      @scripts = @scripts.push fromJS INITIAL_SCRIPT
+
+    @emit 'state-changed', 'receive', data
 
   update: (script) ->
-    @state = script
-    console.warn 'TODO', 'save script as draft'
-    @emit 'state-changed', 'update', @state
+    state = script.get 'state'
+
+    switch state
+      when INITIAL_STATE
+        script   = script.set 'state', DRAFT_STATE
+        @scripts = @scripts.set -1, script
+
+      when DRAFT_STATE
+        @scripts = @scripts.set -1, script
+
+      else
+        script   = script.set 'state', DRAFT_STATE
+        @scripts = @scripts.push script
+
+    storage.setScripts @websites.selected, @scripts.toJS(), =>
+      @emit 'state-changed', 'update', script
 
   save: ->
     console.warn 'TODO', 'save script'
@@ -63,7 +94,7 @@ class Application
   render: ->
     @view.setProps
       websites: @websites
-      script: @state
+      script: @scripts.last()
       messages:
         emit: @emit.bind this
         on: @on.bind this
