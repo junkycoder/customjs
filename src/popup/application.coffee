@@ -1,10 +1,11 @@
 
 Kefir = require 'kefir'
+Const = require './constants'
+
 {List, fromJS} = require 'immutable'
 {comp, filter, map} = require 'transducers-js'
 
-window.List = List
-
+window.im = require 'immutable'
 storage = require './utils/storage'
 
 register = (stream, messageType, handler) ->
@@ -14,22 +15,11 @@ register = (stream, messageType, handler) ->
   )
   stream.transduce(xform).onValue handler
 
-INITIAL_STATE = 0
-DRAFT_STATE   = 1
-
-INITIAL_SCRIPT =
-  enable: false
-  source: '// Here you can type your script'
-  state: INITIAL_STATE
-
 class Application
-  websites:
-    all: []
-    current: null
-    selected: null
-
   constructor: (@view) ->
     @stream = Kefir.emitter()
+
+    @websites = Const.INITIAL_WEBSITES
 
     # For debugging
     @stream.map((x) => x.toJS()).log 'stream'
@@ -38,6 +28,7 @@ class Application
     @on 'change-website', (x) => @load x.first()
     @on 'save-script',   @save.bind this
     @on 'remove-script', @remove.bind this
+    @on 'remove-draft',  @removeDraft.bind this
     @on 'state-changed', @render.bind this
 
   on: (eventName, handler) ->
@@ -63,7 +54,7 @@ class Application
     @scripts = fromJS data.scripts
 
     if @scripts.count() is 0
-      @scripts = @scripts.push fromJS INITIAL_SCRIPT
+      @scripts = @scripts.push fromJS Const.INITIAL_SCRIPT
 
     @emit 'state-changed', 'receive', data
 
@@ -71,30 +62,55 @@ class Application
     state = script.get 'state'
 
     switch state
-      when INITIAL_STATE
-        script   = script.set 'state', DRAFT_STATE
+      when Const.INITIAL_STATE
+        script   = script.set 'state', Const.DRAFT_STATE
         @scripts = @scripts.set -1, script
 
-      when DRAFT_STATE
+      when Const.DRAFT_STATE
         @scripts = @scripts.set -1, script
 
       else
-        script   = script.set 'state', DRAFT_STATE
+        script   = script.set 'state', Const.DRAFT_STATE
         @scripts = @scripts.push script
 
     storage.setScripts @websites.selected, @scripts.toJS(), =>
       @emit 'state-changed', 'update', script
 
   save: ->
-    console.warn 'TODO', 'save script'
+    script = @scripts.last().remove 'state'
+    @scripts = new List [script]
+
+    storage.setScripts @websites.selected, @scripts.toJS(), =>
+      @emit 'state-changed', 'save', script
 
   remove: ->
-    console.warn 'TODO', 'save remove'
+    @scripts = new List [fromJS Const.INITIAL_SCRIPT]
+
+    storage.removeScripts @websites.selected, =>
+      @emit 'state-changed', 'remove'
+
+  removeDraft: ->
+    @scripts = @scripts.filter (x) -> x.get('state') isnt Const.DRAFT_STATE
+
+    callback = => @emit 'state-changed', 'removeDraft'
+
+    if @scripts.isEmpty()
+      @scripts = @scripts.push fromJS Const.INITIAL_SCRIPT
+      storage.removeScripts @websites.selected, callback
+    else
+      storage.setScripts @websites.selected, @scripts.toJS(), callback
+
+  isDraft: (script) ->
+    script.get('state') is Const.DRAFT_STATE
 
   render: ->
+    # Draft will be always the last script, if exists
+    script = @scripts.last()
+
     @view.setProps
       websites: @websites
-      script: @scripts.last()
+      script: script
+      draftPresent: @isDraft script
       messages:
         emit: @emit.bind this
         on: @on.bind this

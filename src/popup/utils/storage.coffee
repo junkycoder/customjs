@@ -12,5 +12,8 @@ module.exports =
 
   setScripts: (origin, scripts, callback) ->
 
-    console.log 'save', scripts
+    do callback
+
+  removeScripts: (origin, callback) ->
+
     do callback
