@@ -99,7 +99,7 @@ class Application
 
     @scripts = new List [fromJS Const.INITIAL_SCRIPT]
 
-    storage.removeScripts @websites.selected, =>
+    storage.removeWebsiteData @websites.selected, =>
       @emit 'state-changed', 'remove'
 
   removeDraft: ->
@@ -109,7 +109,7 @@ class Application
 
     if @scripts.isEmpty()
       @scripts = @scripts.push fromJS Const.INITIAL_SCRIPT
-      storage.removeScripts @websites.selected, callback
+      storage.removeWebsiteData @websites.selected, callback
     else
       storage.setScripts @websites.selected, @scripts.toJS(), callback
 

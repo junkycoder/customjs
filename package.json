@@ -19,6 +19,7 @@
     "brace": "^0.5.0",
     "immutable": "^3.6.4",
     "kefir": "^1.2.0",
+    "lodash": "^3.6.0",
     "react": "0.13.x",
     "transducers-js": "^0.4.135"
   },
