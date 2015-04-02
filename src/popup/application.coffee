@@ -81,6 +81,9 @@ class Application
   isDraft: (script) ->
     script.get('state') is Const.DRAFT_STATE
 
+  isInitial: (script) ->
+    script.get('state') is Const.INITIAL_STATE
+
   save: ->
     script = @scripts.last()
 
@@ -94,8 +97,8 @@ class Application
       @emit 'state-changed', 'save', script
 
   remove: ->
-    # Only modified scripts will be removed
-    return unless @isDraft @scripts.last()
+    # Only stored scripts will be removed
+    return if @isInitial @scripts.last()
 
     @scripts = new List [fromJS Const.INITIAL_SCRIPT]
 
